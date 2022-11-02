@@ -1,0 +1,67 @@
+stages:
+  - build
+  - style_tests
+  - integration_tests
+  - deploy
+
+Build:
+  stage: build
+  tags:
+    - qwer
+  script:
+    - cd src/cat
+    - make build
+    - cd ../grep
+    - make build
+  artifacts:
+    paths:
+      - src/cat/s21_cat
+      - src/grep/s21_grep
+    expire_in: 30 days
+  after_script:
+    - chmod +x ci-notify.sh
+    - ./ci-notify.sh CI 1
+
+Style_Tests:
+  stage: style_tests
+  tags:
+    - qwer
+  script:
+    - cd src/cat
+    - make check
+    - cd ../grep
+    - make check
+  after_script:
+    - chmod +x ci-notify.sh
+    - ./ci-notify.sh CI 1
+
+Integration_Tests:
+  stage: integration_tests
+  tags:
+    - qwer
+  script:
+    - cd src/cat
+    - chmod +x s21_test_cat.sh
+    - ./s21_test_cat.sh
+    - cd ../grep
+    - chmod +x s21_test_grep.sh
+    - ./s21_test_grep.sh
+  after_script:
+    - echo "$CI_JOB_STATUS"
+    - chmod +x ci-notify.sh
+    - ./ci-notify.sh CI 0
+
+Deploy:
+  stage: deploy
+  when: manual
+  tags:
+    - qwer
+  script:
+    - chmod +x run.sh
+    - chmod +x copy.sh
+    - chmod +x move.sh
+    - chmod +x move2.sh
+    - ./run.sh
+  after_script:
+    - chmod +x ci-notify.sh
+    - ./ci-notify.sh CD 0
